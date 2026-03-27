@@ -184,7 +184,7 @@ pipeline$plots$interaction
 If you use CEDMr in your research, please cite:
 
 ```
-Hait, S. (2025). Socioeconomic Status, Health, and Academic Achievement:
+Hait, S. (2026). Socioeconomic Status, Health, and Academic Achievement:
 A Capability-Ecological Developmental Model. Manuscript under review.
 ```
 
