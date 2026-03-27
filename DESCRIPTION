@@ -1,5 +1,5 @@
 Package: CEDMr
-Title: Capability-Ecological Developmental Model (CEDM) Analysis Toolkit
+Title: Capability-Ecological Developmental Model (CEDM) Analysis 
 Version: 0.1.0
 Authors@R:
     person("Subir", "Hait",
