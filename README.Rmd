@@ -1,0 +1,116 @@
+# CEDMr — R CMD check Fixes
+# ============================================================
+
+## Summary of all errors / warnings / notes and their fixes
+
+| # | Severity | Message | Root cause | Fix file |
+|---|----------|---------|------------|----------|
+| 1 | **ERROR** | Infinite recursion in `print.cedm_sensitivity` | `x[, cols]` keeps class `cedm_sensitivity` → `print()` recurses | `cedm_sensitivity_fix.R` |
+| 2 | NOTE | `no visible binding for global variable '.data'` etc. | Bare names in `aes()` / dplyr not declared | `globals.R` |
+| 3 | NOTE | `no visible global function definition for ':='` and `complete.cases` | Missing `@importFrom` declarations | `roxygen_imports.R` |
+| 4 | **WARNING** | Undocumented: `cedm_full_pipeline`, `cedm_rewb`, `cedm_trajectory` | Stray `#' @importFrom magrittr %>%` above function roxygen blocks swallows the docs | `doc_stubs.R` + source edits |
+| 5 | NOTE | `License stub is invalid DCF` | LICENSE file is a template placeholder | Edit DESCRIPTION |
+| 6 | NOTE | `Imports not imported from: 'cluster' 'konfound' 'methods'` | Packages listed in Imports but never called | Edit DESCRIPTION |
+
+---
+
+## Step-by-step instructions
+
+### Step 1 — Copy the three new R files into your package
+
+Copy from this folder into `R/`:
+
+```
+R/globals.R
+R/roxygen_imports.R
+R/cedm_sensitivity_fix.R   (replaces/updates the print method only)
+```
+
+> **Important:** In your original `cedm_sensitivity.R`, delete (or comment out)
+> the existing `print.cedm_sensitivity` function and replace it with the one in
+> `cedm_sensitivity_fix.R`.
+
+---
+
+### Step 2 — Fix the stray `@importFrom` at the top of two source files
+
+**Why this matters:**  
+`cedm_trajectory.R` and `cedm_pipeline.R` both begin with:
+
+```r
+#' @importFrom magrittr %>%
+#' Longitudinal Health Trajectory Clustering  ← roxygen2 sees this as
+#'                                               the title for NULL, not
+#'                                               for the function below
+```
+
+roxygen2 attaches the `@importFrom` to a blank `NULL` topic and then has
+**no roxygen block** left for `cedm_trajectory` / `cedm_full_pipeline`,
+so those functions appear undocumented.
+
+**Fix:** Delete line 1 (`#' @importFrom magrittr %>%`) from both files.
+The `%>%` import is now centralised in `roxygen_imports.R`.
+
+---
+
+### Step 3 — Edit `DESCRIPTION`
+
+```
+# Change License: (if your LICENSE file is a stub)
+License: MIT
+
+# Remove unused Imports:
+Imports:
+    dplyr,
+    ggplot2,
+    lme4,
+    magrittr,
+    purrr,
+    rlang,
+    rms,
+    stats,
+    tidyr
+```
+
+If you actually use `cluster` (hierarchical clustering),
+keep it in Imports **and** add `#' @importFrom cluster agnes`
+(or whatever function you call) to `roxygen_imports.R`.
+
+---
+
+### Step 4 — Regenerate the NAMESPACE and docs
+
+```r
+devtools::document()   # re-runs roxygen2
+devtools::check()      # should now be clean
+```
+
+---
+
+## What caused the infinite recursion (detailed)
+
+```r
+# BEFORE (broken):
+print.cedm_sensitivity <- function(x, ...) {
+  ...
+  print(x[, display_cols], row.names = FALSE)
+  # x[, display_cols] returns an object of class c("cedm_sensitivity","data.frame")
+  # so R dispatches back to print.cedm_sensitivity → infinite loop
+}
+
+# AFTER (fixed):
+print.cedm_sensitivity <- function(x, ...) {
+  ...
+  x_plain <- x[, display_cols, drop = FALSE]
+  class(x_plain) <- "data.frame"   # strip custom class first
+  print(x_plain, row.names = FALSE) # now dispatches to print.data.frame
+}
+```
+
+---
+
+## After all fixes, expected `devtools::check()` output
+
+```
+0 errors ✓ | 0 warnings ✓ | 0 notes ✓
+```
