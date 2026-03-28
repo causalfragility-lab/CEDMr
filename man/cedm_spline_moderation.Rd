@@ -51,14 +51,14 @@ by SES level (if \code{plot = TRUE}).
 Fits a multilevel nonlinear moderation model using restricted cubic splines
 (RCS) to capture threshold and nonlinear effects of health on the
 SES-achievement relationship. Implements the spline-based approach used
-in Hait (2025) for detecting nonlinearities in the BMI-achievement link
+in Hait (2026) for detecting nonlinearities in the BMI-achievement link
 that are invisible in linear models.
 }
 \details{
 Restricted cubic splines allow the health-achievement relationship to be
 nonlinear and threshold-based -- exactly the pattern predicted by the CEDM
 for amplifying contexts, where health constraints accelerate sharply at
-the upper end of the health-risk distribution (Tomasi & Volkow, 2024).
+the upper end of the health-risk distribution.
 }
 \examples{
 \dontrun{
@@ -77,7 +77,8 @@ print(result)
 
 }
 \references{
-Harrell, F. E. (2015). Regression modeling strategies. Springer.
-Hait, S. (2025). Socioeconomic Status, Health, and Academic Achievement:
+Harrell, F. E. (2015). \emph{Regression Modeling Strategies}. Springer.
+
+Hait, S. (2026). Socioeconomic Status, Health, and Academic Achievement:
 A Capability-Ecological Developmental Model.
 }

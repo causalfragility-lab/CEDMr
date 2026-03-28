@@ -33,19 +33,24 @@ plot_regimes <- function(data,
   req_vars <- c(ses_var, health_var, regime_var, outcome_var)
   req_vars <- req_vars[!is.null(req_vars)]
   missing  <- req_vars[!req_vars %in% names(data)]
-  if (length(missing) > 0) stop(paste("Missing variables:", paste(missing, collapse = ", ")))
+  if (length(missing) > 0) {
+    stop(paste("Missing variables:", paste(missing, collapse = ", ")))
+  }
 
   regime_colors <- c(
-    "amplifying"    = "#d73027",
-    "neutral"       = "#fee090",
-    "compensatory"  = "#4575b4"
+    "amplifying"   = "#d73027",
+    "neutral"      = "#fee090",
+    "compensatory" = "#4575b4"
   )
 
-  p <- ggplot2::ggplot(data,
-                       ggplot2::aes(x     = .data[[ses_var]],
-                                    y     = .data[[health_var]],
-                                    color = .data[[regime_var]])) +
-    ggplot2::geom_point(alpha = alpha_pt, size = if (is.null(outcome_var)) 2 else 1) +
+  p <- ggplot2::ggplot(
+    data,
+    ggplot2::aes(x     = .data[[ses_var]],
+                 y     = .data[[health_var]],
+                 color = .data[[regime_var]])
+  ) +
+    ggplot2::geom_point(alpha = alpha_pt,
+                        size  = if (is.null(outcome_var)) 2 else 1) +
     ggplot2::scale_color_manual(values = regime_colors, name = "CEDM Regime") +
     ggplot2::labs(
       title    = title,
@@ -58,7 +63,8 @@ plot_regimes <- function(data,
     ggplot2::theme(legend.position = "bottom")
 
   if (!is.null(outcome_var)) {
-    p <- p + ggplot2::aes(size = .data[[outcome_var]]) +
+    p <- p +
+      ggplot2::aes(size = .data[[outcome_var]]) +
       ggplot2::scale_size_continuous(name = outcome_var, range = c(0.5, 4))
   }
 
@@ -84,12 +90,12 @@ plot_regimes <- function(data,
 #'
 #' @export
 plot_cedm_interaction <- function(cedm_prod_result,
-                                   data,
-                                   ses_var,
-                                   health_var,
-                                   regime_var,
-                                   outcome_var,
-                                   n_points = 50) {
+                                  data,
+                                  ses_var,
+                                  health_var,
+                                  regime_var,
+                                  outcome_var,
+                                  n_points = 50) {
 
   fit <- if (inherits(cedm_prod_result, "cedm_production")) {
     cedm_prod_result$model
@@ -97,39 +103,43 @@ plot_cedm_interaction <- function(cedm_prod_result,
     cedm_prod_result
   }
 
-  regimes   <- levels(data[[regime_var]])
-  ses_vals  <- stats::quantile(data[[ses_var]], probs = c(0.25, 0.75), na.rm = TRUE)
+  regimes    <- levels(data[[regime_var]])
+  ses_vals   <- stats::quantile(data[[ses_var]], probs = c(0.25, 0.75),
+                                na.rm = TRUE)
   health_rng <- range(data[[health_var]], na.rm = TRUE)
   health_seq <- seq(health_rng[1], health_rng[2], length.out = n_points)
 
   ses_labels <- c("Low SES (25th pct)", "High SES (75th pct)")
-  regime_colors <- c("amplifying" = "#d73027", "neutral" = "#fee090",
-                     "compensatory" = "#4575b4")
+  regime_colors <- c(
+    "amplifying"   = "#d73027",
+    "neutral"      = "#fee090",
+    "compensatory" = "#4575b4"
+  )
 
-  # Identify the exact variable names the model was fitted with
-  ses_mean    <- mean(data[[ses_var]],    na.rm = TRUE)
-  health_mean <- mean(data[[health_var]], na.rm = TRUE)
+  ses_mean     <- mean(data[[ses_var]],    na.rm = TRUE)
+  health_mean  <- mean(data[[health_var]], na.rm = TRUE)
   ses_c_var    <- paste0(ses_var,    "_c")
   health_c_var <- paste0(health_var, "_c")
 
-  # Get all variable names the model expects
-  model_vars <- tryCatch(all.vars(stats::formula(fit)), error = function(e) character(0))
+  model_vars <- tryCatch(
+    all.vars(stats::formula(fit)),
+    error = function(e) character(0)
+  )
 
   pred_list <- lapply(regimes, function(reg) {
     lapply(seq_along(ses_vals), function(j) {
 
-      # Start with a named list to build the prediction row cleanly
       pred_list_row <- list()
-      pred_list_row[[ses_var]]     <- rep(ses_vals[j], n_points)
-      pred_list_row[[health_var]]  <- health_seq
-      pred_list_row[[regime_var]]  <- factor(rep(reg, n_points), levels = regimes)
-      pred_list_row[[ses_c_var]]   <- rep(ses_vals[j] - ses_mean, n_points)
+      pred_list_row[[ses_var]]      <- rep(ses_vals[j], n_points)
+      pred_list_row[[health_var]]   <- health_seq
+      pred_list_row[[regime_var]]   <- factor(rep(reg, n_points), levels = regimes)
+      pred_list_row[[ses_c_var]]    <- rep(ses_vals[j] - ses_mean, n_points)
       pred_list_row[[health_c_var]] <- health_seq - health_mean
 
-      # Add any other model variables at their mean/reference level
-      other_vars <- setdiff(model_vars,
-                            c(ses_var, health_var, regime_var,
-                              ses_c_var, health_c_var))
+      other_vars <- setdiff(
+        model_vars,
+        c(ses_var, health_var, regime_var, ses_c_var, health_c_var)
+      )
       for (col in other_vars) {
         if (col %in% names(data)) {
           if (is.numeric(data[[col]])) {
@@ -165,22 +175,27 @@ plot_cedm_interaction <- function(cedm_prod_result,
   pred_df$regime    <- factor(pred_df$regime, levels = regimes)
   pred_df$ses_level <- factor(pred_df$ses_level)
 
-  p <- ggplot2::ggplot(pred_df,
-                       ggplot2::aes(x     = health,
-                                    y     = predicted,
-                                    color = ses_level,
-                                    group = ses_level)) +
-    ggplot2::geom_line(size = 1.2) +
-    ggplot2::facet_wrap(~ regime,
-                        labeller = ggplot2::labeller(
-                          regime = c(
-                            amplifying   = "Amplifying Regime",
-                            neutral      = "Neutral Regime",
-                            compensatory = "Compensatory Regime"
-                          )
-                        )) +
+  p <- ggplot2::ggplot(
+    pred_df,
+    ggplot2::aes(x     = health,
+                 y     = predicted,
+                 color = ses_level,
+                 group = ses_level)
+  ) +
+    ggplot2::geom_line(linewidth = 1.2) +      # fixed: was size = 1.2
+    ggplot2::facet_wrap(
+      ~ regime,
+      labeller = ggplot2::labeller(
+        regime = c(
+          amplifying   = "Amplifying Regime",
+          neutral      = "Neutral Regime",
+          compensatory = "Compensatory Regime"
+        )
+      )
+    ) +
     ggplot2::scale_color_manual(
-      values = c("Low SES (25th pct)" = "#d73027", "High SES (75th pct)" = "#4575b4"),
+      values = c("Low SES (25th pct)"  = "#d73027",
+                 "High SES (75th pct)" = "#4575b4"),
       name   = "SES Level"
     ) +
     ggplot2::labs(

@@ -52,7 +52,7 @@ A list of class \code{"cedm_mediation"} with elements:
 \description{
 Tests whether a health indicator (e.g., BMI) mediates the relationship between
 SES and academic achievement using the counterfactual framework of Imai et al.
-(2010). Implements the doubly robust design used in Hait (2025) with
+(2010). Implements the doubly robust design used in Hait (2026) with
 nonparametric bootstrap confidence intervals and built-in sensitivity analysis.
 Consistent with CEDM Proposition 1: mediation effects are expected to be
 small and unstable; moderation (see \code{cedm_production}) is expected
@@ -60,9 +60,10 @@ to dominate.
 }
 \details{
 The mediation model follows the two-equation structure used in the ECLS-K
-analysis (Hait, 2025):
+analysis (Hait, 2026):
 \deqn{BMI = \alpha + \gamma \times SES + \delta^\top \times Covariates + \varepsilon_1}
-\deqn{Math = \beta + \tau' \times SES + \zeta \times BMI + \theta^\top \times Covariates + \varepsilon_2}
+\deqn{Math = \beta + \tau' \times SES + \zeta \times BMI +
+  \theta^\top \times Covariates + \varepsilon_2}
 ACME = \eqn{\gamma \times \zeta}; ADE = \eqn{\tau'}.
 
 Per CEDM Proposition 1, a small ACME relative to the total SES effect
@@ -88,8 +89,8 @@ print(result)
 }
 \references{
 Imai, K., Keele, L., & Tingley, D. (2010). A general approach to causal
-mediation analysis. Psychological Methods, 15(4), 309-334.
+mediation analysis. \emph{Psychological Methods}, 15(4), 309-334.
 
-Hait, S. (2025). Socioeconomic Status, Health, and Academic Achievement:
+Hait, S. (2026). Socioeconomic Status, Health, and Academic Achievement:
 A Capability-Ecological Developmental Model.
 }
