@@ -1,5 +1,5 @@
 Package: CEDMr
-Title: Capability-Ecological Developmental Model (CEDM) Analysis 
+Title: Capability-Ecological Developmental Model (CEDM) Analysis Toolkit
 Version: 0.1.0
 Authors@R:
     person("Subir", "Hait",
@@ -10,19 +10,20 @@ Description: Implements the Capability-Ecological Developmental Model (CEDM)
     for studying how socioeconomic status (SES), health indicators (e.g., BMI),
     and ecological contexts jointly shape academic achievement. Provides tools
     for: (1) classifying ecological capability regimes (amplifying, neutral,
-    compensatory); (2) fitting the CEDM capability-conversion production function
-    with moderation and three-way interaction terms; (3) doubly robust causal
-    mediation analysis; (4) random-effects within-between (REWB) decomposition;
-    (5) nonlinear moderation via restricted cubic splines; (6) BMI/health
-    trajectory clustering; and (7) sensitivity analysis using Frank's ITCV and
-    robustness-to-replacement (RIR) indices. The package operationalizes all
-    five CEDM theoretical propositions into directly callable R functions and
-    is designed to work with any longitudinal multi-level dataset, including
-    ECLS-K:2011 and similar surveys.
+    compensatory); (2) fitting the CEDM production function with moderation and
+    three-way interaction terms; (3) doubly robust causal mediation analysis;
+    (4) random-effects within-between (REWB) decomposition; (5) nonlinear
+    moderation via restricted cubic splines; (6) health trajectory clustering;
+    and (7) sensitivity analysis using Frank's impact threshold for a confounding
+    variable (ITCV) and robustness-to-replacement (RIR) indices. The package
+    operationalizes all five CEDM theoretical propositions into directly callable
+    R functions and is designed to work with any longitudinal multi-level
+    dataset, including ECLS-K:2011 and similar surveys.
 License: MIT + file LICENSE
 URL: https://github.com/causalfragility-lab/CEDMr
 BugReports: https://github.com/causalfragility-lab/CEDMr/issues
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends:
@@ -44,5 +45,5 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
-VignetteBuilder: knitr    
+VignetteBuilder: knitr
 Config/testthat/edition: 3
