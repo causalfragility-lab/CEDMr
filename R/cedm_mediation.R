@@ -2,7 +2,7 @@
 #'
 #' Tests whether a health indicator (e.g., BMI) mediates the relationship between
 #' SES and academic achievement using the counterfactual framework of Imai et al.
-#' (2010). Implements the doubly robust design used in Hait (2025) with
+#' (2010). Implements the doubly robust design used in Hait (2026) with
 #' nonparametric bootstrap confidence intervals and built-in sensitivity analysis.
 #' Consistent with CEDM Proposition 1: mediation effects are expected to be
 #' small and unstable; moderation (see \code{cedm_production}) is expected
@@ -33,9 +33,10 @@
 #'
 #' @details
 #' The mediation model follows the two-equation structure used in the ECLS-K
-#' analysis (Hait, 2025):
+#' analysis (Hait, 2026):
 #' \deqn{BMI = \alpha + \gamma \times SES + \delta^\top \times Covariates + \varepsilon_1}
-#' \deqn{Math = \beta + \tau' \times SES + \zeta \times BMI + \theta^\top \times Covariates + \varepsilon_2}
+#' \deqn{Math = \beta + \tau' \times SES + \zeta \times BMI +
+#'   \theta^\top \times Covariates + \varepsilon_2}
 #' ACME = \eqn{\gamma \times \zeta}; ADE = \eqn{\tau'}.
 #'
 #' Per CEDM Proposition 1, a small ACME relative to the total SES effect
@@ -45,9 +46,9 @@
 #'
 #' @references
 #' Imai, K., Keele, L., & Tingley, D. (2010). A general approach to causal
-#' mediation analysis. Psychological Methods, 15(4), 309-334.
+#' mediation analysis. \emph{Psychological Methods}, 15(4), 309-334.
 #'
-#' Hait, S. (2025). Socioeconomic Status, Health, and Academic Achievement:
+#' Hait, S. (2026). Socioeconomic Status, Health, and Academic Achievement:
 #' A Capability-Ecological Developmental Model.
 #'
 #' @examples
@@ -77,42 +78,69 @@ cedm_mediation <- function(data,
                            seed        = 123) {
 
   if (!requireNamespace("mediation", quietly = TRUE)) {
-    stop("Package 'mediation' is required. Please install it with install.packages('mediation').")
+    stop("Package 'mediation' is required. Please install it.")
   }
 
   set.seed(seed)
 
-  # Validate
+  # Validate variables
   req_vars <- c(outcome_var, ses_var, health_var, covariates)
   missing  <- req_vars[!req_vars %in% names(data)]
-  if (length(missing) > 0) stop(paste("Missing variables:", paste(missing, collapse = ", ")))
+  if (length(missing) > 0) {
+    stop(paste("Missing variables:", paste(missing, collapse = ", ")))
+  }
 
-  cov_str <- if (!is.null(covariates)) paste("+", paste(covariates, collapse = " + ")) else ""
+  cov_str <- if (!is.null(covariates)) {
+    paste("+", paste(covariates, collapse = " + "))
+  } else {
+    ""
+  }
 
-  mediator_formula <- stats::as.formula(paste(health_var, "~", ses_var, cov_str))
-  outcome_formula  <- stats::as.formula(paste(outcome_var, "~", ses_var, "+", health_var, cov_str))
+  # Build formulas as strings then parse — avoids mediation package
+  # scoping bug where lm() stores the unevaluated symbol 'mediator_formula'
+  # in its call and mediate() cannot find it in the parent frame.
+  med_fml <- stats::as.formula(
+    paste(health_var, "~", ses_var, cov_str),
+    env = parent.frame()
+  )
+  out_fml <- stats::as.formula(
+    paste(outcome_var, "~", ses_var, "+", health_var, cov_str),
+    env = parent.frame()
+  )
 
-  mediator_model <- stats::lm(mediator_formula, data = data)
-  outcome_model  <- stats::lm(outcome_formula,  data = data)
+  # Fit models using do.call so the formula is embedded in the call object
+  mediator_model <- do.call(
+    stats::lm,
+    list(formula = med_fml, data = quote(data)),
+    envir = environment()
+  )
+  outcome_model <- do.call(
+    stats::lm,
+    list(formula = out_fml, data = quote(data)),
+    envir = environment()
+  )
+
+  # Explicitly update the call so mediation::mediate() can find data
+  mediator_model$call$data <- as.name("data")
+  outcome_model$call$data  <- as.name("data")
 
   med_result <- mediation::mediate(
-    model.m  = mediator_model,
-    model.y  = outcome_model,
-    treat    = ses_var,
-    mediator = health_var,
-    boot     = TRUE,
-    sims     = n_boot,
+    model.m    = mediator_model,
+    model.y    = outcome_model,
+    treat      = ses_var,
+    mediator   = health_var,
+    boot       = TRUE,
+    sims       = n_boot,
     conf.level = conf_level
   )
 
-  med_summary <- summary(med_result)
+  med_summary   <- summary(med_result)
+  acme          <- med_result$d0
+  ade           <- med_result$z0
+  total         <- med_result$tau.coef
+  prop_mediated <- med_result$n0
 
-  acme           <- med_result$d0
-  ade            <- med_result$z0
-  total          <- med_result$tau.coef
-  prop_mediated  <- med_result$n0
-
-  # Sensitivity analysis
+  # Optional sensitivity analysis
   sens_result <- NULL
   if (sensitivity) {
     tryCatch({
@@ -131,14 +159,14 @@ cedm_mediation <- function(data,
     health_var, ").\n",
     if (pct_mediated < 5) {
       paste0(
-        "  This is CONSISTENT with CEDM Proposition 1: ",
+        "  CONSISTENT with CEDM Proposition 1: ",
         health_var, " does NOT function as a meaningful causal conduit.\n",
         "  The health indicator is better conceptualized as a CONDITIONAL ",
         "CONVERSION MODERATOR (see cedm_production())."
       )
     } else {
       paste0(
-        "  This suggests ", health_var, " may carry some SES effects to achievement.\n",
+        "  ", health_var, " may carry some SES effects to achievement.\n",
         "  Consider whether ecological confounding explains this indirect pathway."
       )
     }
@@ -164,7 +192,8 @@ cedm_mediation <- function(data,
 #' @export
 print.cedm_mediation <- function(x, ...) {
   cat("=== CEDM Causal Mediation Analysis ===\n")
-  cat("SES:", x$ses_var, "-> Health:", x$health_var, "-> Outcome:", x$outcome_var, "\n\n")
+  cat("SES:", x$ses_var, "-> Health:", x$health_var,
+      "-> Outcome:", x$outcome_var, "\n\n")
   cat(sprintf("  ACME (indirect via %s) : %.4f\n", x$health_var, x$acme))
   cat(sprintf("  ADE  (direct SES)      : %.4f\n", x$ade))
   cat(sprintf("  Total SES effect       : %.4f\n", x$total_effect))
