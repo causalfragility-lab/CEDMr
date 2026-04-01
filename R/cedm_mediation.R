@@ -52,7 +52,7 @@
 #' A Capability-Ecological Developmental Model.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' set.seed(42)
 #' df <- data.frame(
 #'   math = rnorm(500, 500, 100),

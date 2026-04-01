@@ -53,7 +53,6 @@
 #' A Capability-Ecological Developmental Model.
 #'
 #' @examples
-#' \dontrun{
 #' set.seed(42)
 #' df_long <- data.frame(
 #'   id     = rep(1:200, each = 5),
@@ -67,7 +66,6 @@
 #'                     id_var = "id", time_var = "wave", ses_var = "ses",
 #'                     cluster_var = "school")
 #' print(result)
-#' }
 #'
 #' @export
 cedm_rewb <- function(data,

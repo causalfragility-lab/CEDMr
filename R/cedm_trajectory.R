@@ -32,7 +32,7 @@
 #'   }
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' set.seed(42)
 #' df <- data.frame(
 #'   id   = rep(1:200, each = 5),

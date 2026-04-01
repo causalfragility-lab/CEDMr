@@ -41,7 +41,7 @@
 #'   }
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' sim <- cedm_simulate(n = 3000, n_waves = 5, seed = 42)
 #' pipeline <- cedm_full_pipeline(
 #'   data        = sim,

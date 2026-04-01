@@ -40,7 +40,6 @@
 #' A Capability-Ecological Developmental Model.
 #'
 #' @examples
-#' \dontrun{
 #' set.seed(42)
 #' df <- data.frame(
 #'   math   = rnorm(400, 500, 100),
@@ -52,7 +51,6 @@
 #'                                   ses_var = "ses", health_var = "bmi",
 #'                                   cluster_var = "school")
 #' print(result)
-#' }
 #'
 #' @export
 cedm_spline_moderation <- function(data,
